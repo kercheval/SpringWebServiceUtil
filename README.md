@@ -10,10 +10,12 @@ utility code.
 The basic contents are as follows
 
 *Timer* - A thread safe timer class that is statically stored and has a
-fast debug logging stop.
+fast debug logging stop.  These objects are published via JMX as well
+exposed via the statistics controller.
 
 *Counter* - A thread safe counter class that enables simple counts and
-is maintained statically.
+is maintained statically.  These objects are published via JMX as well
+exposed via the statistics controller.
 
 *MethodTrace* - A class that allows the determination of a stack trace
 element or method name x levels back in the call stack (allowing
@@ -70,6 +72,7 @@ MVC file a line to parse the jar controller annotations
 
 ### Release History
 
+- 1.1 - March 7, 2013 - Publish timers and counters via JMX
 - 1.0 - March 7, 2013 - Initial extraction and publication
 
 ---
