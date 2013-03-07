@@ -3,9 +3,9 @@
 ---
 
 This project contains common utilities that I find I use in every
-service or web application I build.  This is published to help
+spring service or web application I build.  This is published to help
 automate the dependency updates and have a single location for this
-utility code. 
+utility code.
 
 The basic contents are as follows
 
@@ -41,6 +41,29 @@ and return that output as a string.
 
 The statistics controller has been annotated with Swagger annotations
 and can be easily incorporated into your documentation.
+
+---
+
+To use these classes in gradle, add a dependency section for the jar
+dependency in your build gradle file.  Note that the example below
+will take the most recent released jar file available.
+
+```
+repositories {
+    mavenCentral()
+    mavenRepo url: 'http://kercheval.org/mvn-repo/releases'
+}
+
+dependencies {
+    compile 'org.kercheval:SpringWebServiceUtil:+'
+}
+```
+
+---
+
+### Release History
+
+- 1.0 - March 7, 2013 - Initial extraction and publication
 
 ---
 
