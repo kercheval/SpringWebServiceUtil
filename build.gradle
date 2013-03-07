@@ -109,9 +109,23 @@ allprojects {
 
 
     //
-    // Add javadoc to the jar dependencies
+    // Add source jars to the build
     //
-    jar.dependsOn(javadoc)
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+
+        from ("${buildDir}/docs") {
+            into 'docs'
+        }
+    }
+    sourcesJar.dependsOn(classes)
+    sourcesJar.dependsOn(javadoc)
+
+    artifacts {
+        archives sourcesJar
+    }
+
 
     //
     // JAR specific files
@@ -127,18 +141,12 @@ allprojects {
         }
 
         //
-        // Place buildinfo and javadoc into all jar files
+        // Place buildinfo into all jar files
         //
         doFirst {
             from (rootProject.buildinfo.filedir) {
                 include rootProject.buildinfo.filename
                 into 'META-INF'
-            }
-            from ("${buildDir}/docs") {
-                into 'docs'
-            }
-            from (sourceSets.main.allSource) {
-                into 'src'
             }
         }
     }
