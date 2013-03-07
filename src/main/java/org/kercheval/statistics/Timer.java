@@ -1,13 +1,19 @@
 package org.kercheval.statistics;
 
+import java.lang.management.ManagementFactory;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class Timer
+    implements TimerMBean
 {
     public class TimerState
     {
@@ -82,6 +88,8 @@ public final class Timer
     }
 
     private static final Map<String, Timer> TIMER_MAP = new HashMap<String, Timer>();
+    private static final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+    private static final Logger log = LoggerFactory.getLogger(Timer.class);
 
     public static Timer getTimer(final String name)
     {
@@ -92,6 +100,16 @@ public final class Timer
             {
                 newTimer = new Timer(name);
                 TIMER_MAP.put(name, newTimer);
+                try
+                {
+                    mBeanServer.registerMBean(newTimer, new ObjectName("org.kercheval:type=Timer,name=" + name));
+                }
+                catch (final Exception e)
+                {
+                    // Ignore errors except to log the problem
+                    log.debug("Error creating mBean for Timer '" + newTimer.getName() +
+                        "': " + e.getMessage());
+                }
             }
             return newTimer;
         }
@@ -117,6 +135,7 @@ public final class Timer
         this.name = name;
     }
 
+    @Override
     public double getAverageTime()
     {
         synchronized (timerLock)
@@ -130,11 +149,13 @@ public final class Timer
         }
     }
 
+    @Override
     public String getName()
     {
         return name;
     }
 
+    @Override
     public long getTotalCalls()
     {
         synchronized (timerLock)
@@ -143,6 +164,7 @@ public final class Timer
         }
     }
 
+    @Override
     public long getTotalTime()
     {
         synchronized (timerLock)
