@@ -1,0 +1,199 @@
+//
+// Apply standard plugins
+//
+apply plugin: 'gradlecm'
+apply plugin: 'maven'
+apply plugin: 'java'
+
+
+//
+// Basic project info
+//
+description = 'Spring Web Service Utilities'
+project.ext {
+	buildMajorVersion = 1
+}
+
+
+//
+// Normal dev builds will typically get SNAPSHOT versions, the release builds get full 
+// maven style versions.  The project variable buildMajorVersion must be set in the base
+// build.gradle file.
+//
+buildversion {
+    doLast {
+        //
+        // Set the pattern after the tags have been used to set the initial 
+        // values.  Release gets the default pattern of the maven default 
+        //
+        def branchName = buildvcs.getBranchName()
+        if (branchName != 'release' &&
+            !project.hasProperty('noSnapshot')) {
+            version.setPattern("%M%.%m%-SNAPSHOT") 
+        }
+        version.updateMajor(new Integer(buildMajorVersion)) 
+        println("Currently working on sources for " + version);
+
+        //
+        // All subprojects inherit the main version
+        //
+        subprojects {
+            version = rootProject.version
+        }
+    }
+}
+
+
+buildinfo {
+    //
+    // The buildinfo file will be placed in jars via a doFirst enclosure
+    // for all subprojects.  Disable auto insertion via the task map.
+    //
+    taskmap = [:]
+    filedir = "${projectDir}/dev"
+}
+
+
+//
+// Project specific dependencies
+//    
+def springVersion = '3.1.0.RELEASE'
+def jacksonVersion = '1.9.9'
+dependencies {
+    //
+    // Basic logger facade
+    //
+    compile 'org.slf4j:slf4j-log4j12:1.7.2'
+
+    //
+    // Spring support
+    //
+    compile "org.springframework:spring-core:${springVersion}"
+    compile "org.springframework:spring-web:${springVersion}"
+    compile "org.springframework:spring-webmvc:${springVersion}"
+    compile "org.springframework:spring-jdbc:${springVersion}"
+
+    //
+    // Jackson for JSON return
+    //
+    runtime "org.codehaus.jackson:jackson-mapper-asl:$jacksonVersion"
+
+    //
+    // Swagger (https://developers.helloreverb.com/swagger/)
+    //
+    compile ('com.wordnik:swagger-jaxrs_2.9.1:1.1.0')
+
+    //
+    // Trace and multiprocess support library
+    //
+    compile ('com.google.code.tempus-fugit:tempus-fugit:1.1') {
+        exclude group: 'junit'
+    }
+
+    //
+    // Testing
+    //
+    testCompile 'junit:junit:4.+'
+    testCompile 'com.googlecode.jmockit:jmockit:0.999.19'
+    testCompile "org.springframework:spring-test:$springVersion"
+}
+
+
+allprojects {
+    //
+    // Build dependency section
+    //
+    repositories {
+        mavenCentral()
+    }
+
+
+    //
+    // Manifest specific properties.  All tasks the inherit from jar (war/ear) are also affected by this
+    //
+    tasks.withType(Jar) {
+        manifest {
+            doFirst {
+                attributes 'Implementation-Title': project.description, 'Implementation-Version': project.version
+            }
+        }
+
+        //
+        // Place buildinfo into all jar files
+        //
+        doFirst {
+            from(rootProject.buildinfo.filedir) {
+                include rootProject.buildinfo.filename
+                into 'META-INF'
+            }
+        }
+    }
+
+
+    //
+    // Enable lint compilation for compile output
+    //
+    tasks.withType(Compile) {
+        options.compilerArgs << "-Xlint:unchecked"
+    }
+
+
+    //
+    // The publish group for the repository
+    //
+    group = 'org.kercheval'
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                //
+                // Note this cute little bit of indirection.  The upload target will place the repository 
+                // files into a local github repository that is at the same level as the root of this 
+                // project.  I have cloned my maven repository into that location so that these line up
+                // correctly.  This allows me to validate the release binaries and commit them as a 
+                // seperate step.  If I had nexus deployed and was using CI for this project, this repository
+                // reference would be pointing directly at that instead.
+                //
+                repository(url: "file://${rootDir}/../mvn-repo/releases")
+
+                //
+                // Note that this repository will be used ONLY if the 
+                // version ends with 'SNAPSHOT'.
+                //
+                snapshotRepository(url: "file://${rootDir}/../mvn-repo/snapshots") 
+                pom.project {
+                    licenses {
+                        license {
+                            name 'Creative Commons Attribution 3.0 Unported License'
+                            url 'http://creativecommons.org/licenses/by/3.0/deed.en_US'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+//
+// Boilerplate gradle CM support
+//
+buildscript {
+    repositories {
+        mavenCentral()
+		mavenRepo url: 'http://kercheval.org/mvn-repo/releases'
+    }
+    dependencies {
+        classpath 'org.kercheval:GradleCMPlugin:1.11-20130129.143219'
+    }
+}
+
+
+//
+// Gradle wrapper
+//
+task wrapper(type: Wrapper) {
+	gradleVersion = '1.4'
+}
+
+

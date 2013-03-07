@@ -1,0 +1,38 @@
+# Basic files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# Compiled files
+.class
+.jar
+.war
+
+# Gradle build locations
+.gradle
+build
+gradle-app.setting
+
+# Custom configuration files and static content
+dev/
+
+# Eclipse files
+.classpath
+.project
+.settings
+bin
+tmp
+
+# IntelliJ files
+*.iml
+*.ipr
+*.iws
+.idea
+
+# Misc files
+hs_err_pid*
