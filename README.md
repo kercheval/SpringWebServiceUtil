@@ -59,6 +59,13 @@ dependencies {
 }
 ```
 
+To use the service entry points, you will need to add to your spring
+MVC file a line to parse the jar controller annotations
+
+```
+<context:component-scan base-package="org.kercheval" />
+```
+
 ---
 
 ### Release History
