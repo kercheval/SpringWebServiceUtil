@@ -109,9 +109,17 @@ allprojects {
 
 
     //
-    // Manifest specific properties.  All tasks the inherit from jar (war/ear) are also affected by this
+    // Add javadoc to the jar dependencies
+    //
+    jar.dependsOn(javadoc)
+
+    //
+    // JAR specific files
     //
     tasks.withType(Jar) {
+        //
+        // Manifest specific properties.  All tasks the inherit from jar (war/ear) are also affected by this
+        //
         manifest {
             doFirst {
                 attributes 'Implementation-Title': project.description, 'Implementation-Version': project.version
@@ -119,12 +127,18 @@ allprojects {
         }
 
         //
-        // Place buildinfo into all jar files
+        // Place buildinfo and javadoc into all jar files
         //
         doFirst {
-            from(rootProject.buildinfo.filedir) {
+            from (rootProject.buildinfo.filedir) {
                 include rootProject.buildinfo.filename
                 into 'META-INF'
+            }
+            from ("${buildDir}/docs") {
+                into 'docs'
+            }
+            from (sourceSets.main.allSource) {
+                into 'src'
             }
         }
     }
