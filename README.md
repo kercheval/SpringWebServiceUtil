@@ -72,7 +72,7 @@ MVC file a line to parse the jar controller annotations
 
 ### Release History
 
-- 1.1 - March 7, 2013 - Publish timers and counters via JMX
+- 1.2 - March 7, 2013 - Publish timers and counters via JMX
 - 1.0 - March 7, 2013 - Initial extraction and publication
 
 ---
