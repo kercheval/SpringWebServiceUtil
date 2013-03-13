@@ -56,8 +56,9 @@ public class Config
      * using the filename specified by the parameter
      * <code>configFileName</code>.
      * <p>
-     * The file load will be logged at info level.  Failure to
-     * load the file will be logged at error level.
+     * The file load will be logged at info level.  Values loaded
+     * from the properties file will be logged at debug level.
+     * Failure to load the file will be logged at error level.
      * <p>
      * The file format used should be the same as specified for
      * <code>java.util.Properties</code>.
@@ -82,6 +83,27 @@ public class Config
     }
 
     /**
+     * Get the string value of the property specified by the parameter 'name'.
+     *
+     * @param name          the name of the property to return
+     * @param defaultValue  the value to return of the named property is
+     *                      not present in the configuration
+     * @return              the string value of the named property
+     */
+    public String getString(final String name, final String defaultValue)
+    {
+        String rVal = defaultValue;
+
+        final String property = (String) properties.get(name);
+        if (null != property)
+        {
+            rVal = property;
+        }
+
+        return rVal;
+    }
+
+    /**
      * Get the named property as a boolean value.  Any value other than
      * 'true' will be returned as false.
      *
@@ -91,17 +113,44 @@ public class Config
      */
     public boolean getBoolean(final String name, final boolean defaultValue)
     {
-        boolean rVal;
+        boolean rVal = defaultValue;
 
         final String property = (String) properties.get(name);
-
-        if (null == property)
-        {
-            rVal = defaultValue;
-        }
-        else
+        if (null != property)
         {
             rVal = Boolean.valueOf(property);
+        }
+        return rVal;
+    }
+
+    /**
+     * Get the named property as an Integer value.  If the property does not
+     * exist or is unable to be converted to an Integer value, then the value
+     * defined in the parameter <code>defaultValue</code> will be returned.
+     * <p>
+     * Failure to convert a value found in the property file to an Integer will
+     * result in a log entry at the error level.
+     *
+     * @param name              The name of the property to return
+     * @param defaultValue      The value to return of the property is not present or invalid
+     * @return                  The Integer value of the property named
+     */
+    public Integer getInteger(final String name, final Integer defaultValue)
+    {
+        Integer rVal = defaultValue;
+
+        final String property = (String) properties.get(name);
+        if (null != property)
+        {
+            try
+            {
+                rVal = Integer.valueOf(property);
+            }
+            catch (final NumberFormatException e)
+            {
+                logger.error("Unable to convert property " + name
+                    + " to Integer, using default value.  Exception message was: " + e.getMessage());
+            }
         }
         return rVal;
     }
@@ -119,6 +168,21 @@ public class Config
     public Properties getProperties()
     {
         return properties;
+    }
+
+    /**
+     * Set the backing store properties for this configuration object.  The
+     * prior property files will be discarded.  This method will use the passed
+     * properties directly so any modification of the passed
+     * <code>java.util.Properties</code> object will be reflected in the other
+     * query methods of this object.
+     *
+     * @param properties the new set of properties to use for this configuration
+     */
+    public void setProperties(final Properties properties)
+    {
+        this.properties = properties;
+        logPropertyLoad(properties);
     }
 
     @SuppressWarnings("resource")
@@ -151,30 +215,6 @@ public class Config
         return props;
     }
 
-    /**
-     * Get the string value of the property specified by the parameter 'name'.
-     *
-     * @param name          the name of the property to return
-     * @param defaultValue  the value to return of the named property is
-     *                      not present in the configuration
-     * @return              the string value of the named property
-     */
-    public String getString(final String name, final String defaultValue)
-    {
-        String rVal = defaultValue;
-        final String property = (String) properties.get(name);
-
-        if (null == property)
-        {
-            rVal = defaultValue;
-        }
-        else
-        {
-            rVal = property;
-        }
-        return rVal;
-    }
-
     private void logPropertyLoad(final Properties props)
     {
         logger.debug("   Loaded properties numbering " + props.size());
@@ -182,19 +222,5 @@ public class Config
         {
             logger.debug("     key: " + entry.getKey() + " value: " + entry.getValue());
         }
-    }
-
-    /**
-     * Set the backing store properties for this configuration object.  The
-     * prior property files will be discarded.  This method will use the passed
-     * properties directly so any modification of the passed
-     * <code>java.util.Properties</code> object will be reflected in the other
-     * query methods of this object.
-     *
-     * @param properties the new set of properties to use for this configuration
-     */
-    public void setProperties(final Properties properties)
-    {
-        this.properties = properties;
     }
 }

@@ -39,6 +39,18 @@ public class ConfigTest
         Assert.assertTrue(value);
         strValue = config.getString(TEST_PROPERTY, "green");
         Assert.assertEquals("true", strValue);
+
+        props.clear();
+        Integer intValue = config.getInteger(TEST_PROPERTY, 34);
+        Assert.assertEquals(Integer.valueOf(34), intValue);
+
+        props.put(TEST_PROPERTY, "23");
+        intValue = config.getInteger(TEST_PROPERTY, 34);
+        Assert.assertEquals(Integer.valueOf(23), intValue);
+
+        props.put(TEST_PROPERTY, "23and43");
+        intValue = config.getInteger(TEST_PROPERTY, 34);
+        Assert.assertEquals(Integer.valueOf(34), intValue);
     }
 
     @Test

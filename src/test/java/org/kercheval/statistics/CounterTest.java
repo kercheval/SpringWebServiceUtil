@@ -12,6 +12,9 @@ public class CounterTest
     {
         final int numCounters = Counter.getCounters().size();
         final Counter counter = Counter.getCounter(MY_TEST_COUNTER);
+        final Counter counterAgain = Counter.getCounter(MY_TEST_COUNTER);
+
+        Assert.assertSame(counter, counterAgain);
 
         Assert.assertEquals(0, counter.getCount());
         Assert.assertEquals(MY_TEST_COUNTER, counter.getName());

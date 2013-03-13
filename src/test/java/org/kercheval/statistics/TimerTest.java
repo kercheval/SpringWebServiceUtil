@@ -78,8 +78,18 @@ public class TimerTest
         final int initialTimerCount = Timer.getTimers().size();
         final Timer timer = Timer.getTimer(TEST_TIMER_1);
         Assert.assertEquals(TEST_TIMER_1, timer.getName());
+        Assert.assertEquals(Double.valueOf(0.0), Double.valueOf(timer.getAverageTime()));
 
         Timer.TimerState timerState = timer.start();
+        Assert.assertEquals(timer, timerState.getTimer());
+
+        try {
+            timerState.getElapsedTime();
+            Assert.fail("Exception expected");
+        } catch(final IllegalStateException e) {
+            // Ignore
+        }
+
         ThreadUtils.sleep(Duration.millis(50));
         timerState.stop();
         Assert.assertEquals(1, timer.getTotalCalls());
