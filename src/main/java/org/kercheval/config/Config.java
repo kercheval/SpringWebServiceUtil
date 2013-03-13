@@ -61,7 +61,7 @@ public class Config
      * Failure to load the file will be logged at error level.
      * <p>
      * The file format used should be the same as specified for
-     * <code>java.util.Properties</code>.
+     * <code>java.util.Properties.load()</code>.
      *
      * @param configFileName    the name of the file to load as a
      *                          properties file.
