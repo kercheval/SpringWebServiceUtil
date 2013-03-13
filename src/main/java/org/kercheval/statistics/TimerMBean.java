@@ -21,7 +21,7 @@ public interface TimerMBean
     public String getName();
 
     /**
-     * Get the total calls for this timer.  The count for a timer begins at zero
+     * Get the total number of events timed for this timer.  The count for a timer begins at zero
      * and is incremented on every reference via the {@link Timer.TimerState#stop}
      * method. Active timer usage is not included in this value return.
      *
