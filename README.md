@@ -44,6 +44,8 @@ and return that output as a string.
 The statistics controller has been annotated with Swagger annotations
 and can be easily incorporated into your documentation.
 
+Full JavaDoc, source and JUNIT test accompany this release build.
+
 ---
 
 To use these classes in gradle, add a dependency section for the jar
