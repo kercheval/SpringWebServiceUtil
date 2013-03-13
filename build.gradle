@@ -206,7 +206,7 @@ buildscript {
 		mavenRepo url: 'http://kercheval.org/mvn-repo/releases'
     }
     dependencies {
-        classpath 'org.kercheval:GradleCMPlugin:1.11-20130129.143219'
+        classpath 'org.kercheval:GradleCMPlugin:1.12-20130313.133122'
     }
 }
 
