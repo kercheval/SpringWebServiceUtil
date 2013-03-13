@@ -22,6 +22,47 @@ import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.jaxrs.JavaHelp;
 
+/**
+ * This class supports the creation of a statistic interface for web
+ * services.
+ * <p>
+ * This controller has been annotated using Spring MVC annotations and
+ * can be used without modification in your service as long as the
+ * /statistics entry point is not already in use.
+ * <p>
+ * Several entry points are defined to acquire information via HTTP.
+ * <ul>
+ * <li>/statistics/counters - This entry point will return a JSON
+ * list of the current state of all {@link Counter} items currently
+ * in the system.</li>
+ * <li>/statistics/timers - This entry point will return a JSON list
+ * of all the current values of all {@link Timer} items in the system.</li>
+ * <li>/statistics/memory - This entry point will return a JSON list
+ * showing the current memory status of the running VM.</li>
+ * <li>/statistics/system - This entry point will return a JSON list
+ * of current VM system properties.</li>
+ * <li>/statistics/host - This entry point will return a JSON list of
+ * all host related system properties.</li>
+ * <li>/statistics/threads - This entry point will execute a VM thread
+ * dump and return that output as a string.</li>
+ * </ul>
+ * <p>
+ * The statistics controller has been annotated with Swagger annotations and
+ * can be easily incorporated into your documentation
+ * <p>
+ * To enable this controller, you must be certain that annotation
+ * based scanning is enabled in spring and the following context in
+ * in your spring configuration file
+ * <p>
+ * <code>&lt;context:component-scan base-package="org.kercheval" /&gt;</code>
+ * <p>
+ * or you explicitly add this class to your MVC configuration.
+ * <p>
+ * This class has been annotated with Swagger annotations to support
+ * swagger documentation.
+ *
+ * @author John Kercheval
+ */
 @Controller
 @RequestMapping("/statistics")
 @Api(
@@ -32,12 +73,23 @@ public class StatisticsController
 {
     final Logger logger;
 
+    /**
+     * Generate the logger for the controller and log the creation of the
+     * controller at the debug level.
+     */
     public StatisticsController()
     {
         logger = LoggerFactory.getLogger(this.getClass());
         logger.debug("Creating Controller " + this.getClass().getName());
     }
 
+    /**
+     * Get an unmodifiable collection of all the {@link Counter}
+     * objects defined in the system.  This method when used as a
+     * web service entry point will return JSON data.
+     *
+     * @return the collection of {@link Counter} objects in the system
+     */
     @RequestMapping(
         value = "/counters",
         method = RequestMethod.GET)
@@ -52,6 +104,13 @@ public class StatisticsController
         return Counter.getCounters();
     }
 
+    /**
+     * Get host specific runtime and system properties of the current VM.
+     * This method when used as a
+     * web service entry point will return JSON data.
+     *
+     * @return a set of Properties which represent the current host of the VM
+     */
     @RequestMapping(
         value = "/host",
         method = RequestMethod.GET)
@@ -84,6 +143,13 @@ public class StatisticsController
         return hostProps;
     }
 
+    /**
+     * Get the memory specific runtime properties of the current VM.
+     * This method when used as a
+     * web service entry point will return JSON data.
+     *
+     * @return a set of Properties which represent the current system memory state of the VM
+     */
     @RequestMapping(
         value = "/memory",
         method = RequestMethod.GET)
@@ -101,6 +167,12 @@ public class StatisticsController
         return memProps;
     }
 
+    /**
+     * Get all system properties of the current VM.  This method when used as a
+     * web service entry point will return JSON data.
+     *
+     * @return a set of Properties which represent the current system properties of the VM
+     */
     @RequestMapping(
         value = "/system",
         method = RequestMethod.GET)
@@ -113,6 +185,14 @@ public class StatisticsController
         return System.getProperties();
     }
 
+    /**
+     * Get a thread dump of the entire VM running this service.  This
+     * is done using the Tempus Fugit concurrent code library
+     * (http://tempusfugitlibrary.org).  This library will detect
+     * active deadlocks as well as the jstack similar thread dump.
+     *
+     * @return a string representation of the current thread state of the VM
+     */
     @RequestMapping(
         value = "/threads",
         method = RequestMethod.GET)
@@ -128,6 +208,13 @@ public class StatisticsController
         return baos.toString();
     }
 
+    /**
+     * Get an unmodifiable collection of all the {@link Timer}
+     * objects defined in the system.  This method when used as a
+     * web service entry point will return JSON data.
+     *
+     * @return the collection of {@link Timer} objects in the system
+     */
     @RequestMapping(
         value = "/timers",
         method = RequestMethod.GET)

@@ -12,9 +12,41 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Implements a thread safe, atomic timer that is registered as a JMX bean.
+ * <p>
+ * <code>Timer</code> objects contain aggregate statistics about the number
+ * of events that have been timed, the total time for all events and the
+ * average elapsed time for all events.
+ * <p>
+ * An event is timed by calling the factory method {@link Timer#start()} and
+ * obtaining a {@link TimerState} object.  Once the event being timed has
+ * been completed a call to {@link TimerState#stop} will update the originating
+ * <code>Timer</code> statistics atomically.  Many events may be being timed
+ * with the same <code>Timer</code> at the same time.
+ * <p>
+ * When a new timer is created, it is registered as an mbean in the current
+ * JMX server instance and can be read via any JMX client.
+ *
+ * @author John Kercheval
+ * @see TimerState
+ */
 public final class Timer
     implements TimerMBean
 {
+    /**
+     * Allows the timing of an event from a {@link Timer}
+     * <p>
+     * A <code>TimerState</code> is obtained by a call to {@link Timer#start()}.
+     * A <code>TimerState</code> object contain the state necessary to update a
+     * {@link Timer} object when the method {@link TimerState#stop} is called.
+     * <p>
+     * <code>TimerState</code> objects can be queried for start time, parent
+     * timer and (after the event has completed) the elapsed time for the
+     * particular event.
+     *
+     * @author John Kercheval
+     */
     public class TimerState
     {
         private final long start;
@@ -23,12 +55,28 @@ public final class Timer
         private boolean active = true;
         private long elapsedTime = 0;
 
-        public TimerState(final Timer timer)
+        /**
+         * Contructor to create a TimerState.  This constructor should only
+         * be called from {@link Timer#start()}.
+         *
+         * @param timer the parent timer creating this object
+         */
+        protected TimerState(final Timer timer)
         {
             this.timer = timer;
             start = System.currentTimeMillis();
         }
 
+        /**
+         * Get the elapsed time of the current event in milliseconds.  This
+         * number is only available after the event has completed.  A call
+         * to this method (before a call to {@link TimerState#stop}, will
+         * result in an <code>IllegalStateException</code>.
+         *
+         * @return the elapsed time in milliseconds
+         * @throws IllegalStateException returned if the timer event has not completed
+         *                  (as signaled by a call to {@link TimerState#stop})
+         */
         public long getElapsedTime()
         {
             synchronized (timer)
@@ -41,16 +89,39 @@ public final class Timer
             }
         }
 
+        /**
+         * Get the time of creation of this specific <code>TimerState</code>
+         * object.  The time returned is in milliseconds since epoch consistent
+         * with the return value of <code>System.currentTimeMillis()</code>.
+         *
+         * @return the start time in milliseconds since epoch
+         */
         public long getStartTime()
         {
             return start;
         }
 
+        /**
+         * Get the {@link Timer} which created this <code>TimerState</code>
+         *
+         * @return the parent timer which created this <code>TimerState</code>
+         */
         public Timer getTimer()
         {
             return timer;
         }
 
+        /**
+         * Stop the current event timer and atomically update the parent timer
+         * statistics.  Once this call is made, the method {@link TimerState#getElapsedTime()}
+         * may be called successfully to determine the total time of the event.
+         * <p>
+         * This method may be called only once and will throw an <code>IllegalStateException</code>
+         * if more than one call is made to stop for any specific <code>TimerState</code> object.
+         *
+         * @throws IllegalStateException thrown if <code>TimerState.stop</code> is called more than once.
+         */
+        @SuppressWarnings("synthetic-access")
         public void stop()
         {
             synchronized (timer)
@@ -65,6 +136,20 @@ public final class Timer
             }
         }
 
+        /**
+         * Stop the current timer event and log a debug message.  This method
+         * immediately calls {@link TimerState#stop()}, builds a message from
+         * the vararg message parameters and logs a debug message.
+         * <p>
+         * This is a very efficient logger method which uses a <code>StringBuilder</code>
+         * to create the log message only if debug logging is enabled.  The vararg message
+         * parameter allow efficient passing of parameters to avoid prebuilding of strings
+         * for logging.
+         *
+         * @param logger the logger to use to log the message to after the timer is stopped
+         * @param message the message to log after the timer is stopped
+         * @see TimerState#stop()
+         */
         public void stopAndDebugLog(final Logger logger, final String... message)
         {
             synchronized (timer)
@@ -91,6 +176,20 @@ public final class Timer
     private static final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
     private static final Logger log = LoggerFactory.getLogger(Timer.class);
 
+    /**
+     * Get a timer with the name specified.  The timer returned
+     * is a thread safe and atomic timer.  Multiple threads may be
+     * updating timer statistics or using a particular timer at the
+     * same time.
+     * <p>
+     * This factory method will create a new timer if one with
+     * the specified name has not already been created.  If a new timer
+     * is created, that timer is registered as a JMX mbean and can be
+     * accessed via jconsole or other JMX client.
+     *
+     * @param name the name of the timer to get
+     * @return the timer with the name specified
+     */
     public static Timer getTimer(final String name)
     {
         synchronized (TIMER_MAP)
@@ -115,6 +214,18 @@ public final class Timer
         }
     }
 
+    /**
+     * Get all timers created in the system in a collection that is
+     * not modifiable.  This collection will be be updated if new timers
+     * are created in the system and a new call to <code>getTimers</code>
+     * will be necessary.
+     * <p>
+     * Note that any timer contained in this collection can be used
+     * normally as a timer exactly as if the timer was obtained by
+     * the factory method {@link Timer#getTimer(String)}
+     *
+     * @return an unmodifiable collection of all timers in the system
+     */
     public static Collection<Timer> getTimers()
     {
         synchronized (TIMER_MAP)
@@ -173,12 +284,24 @@ public final class Timer
         }
     }
 
+    /**
+     * Get a {@link TimerState} that allows the timing of a specific single
+     * event.  The returned object contains all the state necessary to
+     * update the parent timer statistics when {@link TimerState#stop} is called.
+     * <p>
+     * Until {@link TimerState#stop} is called, individual {@link TimerState}
+     * objects have no affect on the timer statistics.
+     *
+     * @return a timer state variable that enables timing of a single event
+     * @see TimerState#stop()
+     * @see TimerState#stopAndDebugLog(Logger, String...)
+     */
     public TimerState start()
     {
         return new TimerState(this);
     }
 
-    protected void stop(final TimerState state)
+    private void stop(final TimerState state)
     {
         synchronized (timerLock)
         {
