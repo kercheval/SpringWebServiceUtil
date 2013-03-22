@@ -21,10 +21,12 @@ public class CounterTest
         final Counter counterSecondParent = Counter.getCounter(MY_SECOND_PARENT_TEST_COUNTER);
         final Counter counterAgain = Counter.getCounter(MY_TEST_COUNTER, counterParent);
         final Counter counterParented = Counter.getCounter(MY_PARENTED_TEST_COUNTER, counterParent, counterSecondParent);
+        final Counter counterParentedSame = Counter.getCounter(MY_PARENTED_TEST_COUNTER, counterParent, counterSecondParent);
         final Counter counterParentedAgain = Counter.getCounter(MY_PARENTED_TEST_COUNTER, (Counter[]) null);
         final Counter counterParentedAgainAndAgain = Counter.getCounter(MY_PARENTED_TEST_COUNTER, counterAgain);
 
         Assert.assertSame(counter, counterAgain);
+        Assert.assertSame(counterParented, counterParentedSame);
         Assert.assertSame(counterParented, counterParentedAgain);
         Assert.assertSame(counterParented, counterParentedAgainAndAgain);
         Assert.assertEquals(counter.getCount(), counterAgain.getCount());

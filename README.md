@@ -74,6 +74,7 @@ MVC file a line to parse the jar controller annotations
 
 ### Release History
 
+- 1.5 - March 22, 2012 - Add support for parent counters and timers
 - 1.4 - March 13, 2012 - Add javadoc and more JUNIT coverage
 - 1.3 - March 11, 2012 - Create JAR using JDK6 to increase compatibility
 - 1.2 - March 7, 2013 - Publish timers and counters via JMX

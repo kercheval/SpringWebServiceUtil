@@ -12,6 +12,8 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import scala.actors.threadpool.Arrays;
+
 /**
  * Implements a thread safe, atomic timer that is registered as a JMX bean.
  * <p>
@@ -24,6 +26,13 @@ import org.slf4j.LoggerFactory;
  * been completed a call to {@link TimerState#stop} will update the originating
  * <code>Timer</code> statistics atomically.  Many events may be being timed
  * with the same <code>Timer</code> at the same time.
+ * <p>
+ * A timer may have one or more parent timers to allow aggregation statistics
+ * to be maintained.  Normally a parented timer will be initiated using
+ * the factory method {@link Timer#getTimer(String, Timer...)} and then obtained
+ * again for usage via {@link Timer#getTimer(String)}.  Warnings will be
+ * logged if inconsistent factory method usage is made for a specific timer and
+ * different parent parameters.
  * <p>
  * When a new timer is created, it is registered as an mbean in the current
  * JMX server instance and can be read via any JMX client.
@@ -39,7 +48,8 @@ public final class Timer
      * <p>
      * A <code>TimerState</code> is obtained by a call to {@link Timer#start()}.
      * A <code>TimerState</code> object contain the state necessary to update a
-     * {@link Timer} object when the method {@link TimerState#stop} is called.
+     * {@link Timer} object and all of its parents when the method
+     * {@link TimerState#stop} is called.
      * <p>
      * <code>TimerState</code> objects can be queried for start time, parent
      * timer and (after the event has completed) the elapsed time for the
@@ -116,6 +126,10 @@ public final class Timer
          * statistics.  Once this call is made, the method {@link TimerState#getElapsedTime()}
          * may be called successfully to determine the total time of the event.
          * <p>
+         * The parent timers (if any) will be updated after the timer associated with
+         * this state has been updated.  During update, the parent timers may
+         * be inconsistent with the child timer as updates are not transactional.
+         * <p>
          * This method may be called only once and will throw an <code>IllegalStateException</code>
          * if more than one call is made to stop for any specific <code>TimerState</code> object.
          *
@@ -177,6 +191,64 @@ public final class Timer
     private static final Logger log = LoggerFactory.getLogger(Timer.class);
 
     /**
+     * Get a timer with the name and parents specified.  The timer returned
+     * is a thread safe and atomic timer.  Multiple threads may be
+     * updating timer statistics or using a particular timer at the
+     * same time.
+     * <p>
+     * When updating a timer with a parent, the parent timer will also be
+     * updated.  This allows for simple aggregate timers.  A timers parents
+     * may never change, so if a getTimer call with a different parent set
+     * is used, a warning log message will be written.  A call to
+     * {@link Timer#getTimer(String)} will not write a warning message.
+     * The first timer to be created will always be returned, so if you are
+     * using parented timers, take care in construction order.
+     * <p>
+     * This factory method will create a new timer if one with
+     * the specified name has not already been created.  If a new timer
+     * is created, that timer is registered as a JMX mbean and can be
+     * accessed via jconsole or other JMX client.
+     *
+     * @param name the name of the timer to get
+     * @param parents the parent timers to update when this timer is updated
+     * @return the timer with the name specified
+     */
+    public static Timer getTimer(final String name, final Timer... parents)
+    {
+        synchronized (TIMER_MAP)
+        {
+            Timer newTimer = TIMER_MAP.get(name);
+            if (null == newTimer)
+            {
+                newTimer = new Timer(name, parents);
+                TIMER_MAP.put(name, newTimer);
+                try
+                {
+                    mBeanServer.registerMBean(newTimer, new ObjectName("org.kercheval:type=Timer,name=" + name));
+                }
+                catch (final Exception e)
+                {
+                    // Ignore errors except to log the problem
+                    log.debug("Error creating mBean for Timer '" + newTimer.getName() +
+                        "': " + e.getMessage());
+                }
+            }
+            else
+            {
+                //
+                // Verify the parents passed in have not changed and log that fact if
+                // they have.  We explicitly do not fail in this case
+                //
+                if ((parents != null) &&
+                                !Arrays.equals(parents, newTimer.parents)) {
+                    log.warn("Timer factory method called with different parents than initial construction for Timer '" + newTimer.getName() + "'");
+                }
+            }
+            return newTimer;
+        }
+    }
+
+    /**
      * Get a timer with the name specified.  The timer returned
      * is a thread safe and atomic timer.  Multiple threads may be
      * updating timer statistics or using a particular timer at the
@@ -192,26 +264,7 @@ public final class Timer
      */
     public static Timer getTimer(final String name)
     {
-        synchronized (TIMER_MAP)
-        {
-            Timer newTimer = TIMER_MAP.get(name);
-            if (null == newTimer)
-            {
-                newTimer = new Timer(name);
-                TIMER_MAP.put(name, newTimer);
-                try
-                {
-                    mBeanServer.registerMBean(newTimer, new ObjectName("org.kercheval:type=Timer,name=" + name));
-                }
-                catch (final Exception e)
-                {
-                    // Ignore errors except to log the problem
-                    log.debug("Error creating mBean for Timer '" + newTimer.getName() +
-                        "': " + e.getMessage());
-                }
-            }
-            return newTimer;
-        }
+        return getTimer(name, (Timer[]) null);
     }
 
     /**
@@ -238,12 +291,14 @@ public final class Timer
     private long totalCalls = 0;
 
     private final String name;
+    private final Timer[] parents;
 
     private final Object timerLock = new Object();
 
-    private Timer(final String name)
+    private Timer(final String name, final Timer... parents)
     {
         this.name = name;
+        this.parents = parents;
     }
 
     @Override
@@ -264,6 +319,21 @@ public final class Timer
     public String getName()
     {
         return name;
+    }
+
+    /**
+     * Return the parent timers for this timer.  The parent timers
+     * are determined by the first call to a factory method for a timer
+     * of a specific name.  The parents of a timer may not be changed
+     * so care should be taken to ensure the parent list is appropriate
+     * before the first call to obtain a timer is made using
+     * {@link Timer#getTimer}.
+     *
+     * @return an array of parent timers or null if no parents exist
+     */
+    public Timer[] getParents()
+    {
+        return parents;
     }
 
     @Override
@@ -307,6 +377,12 @@ public final class Timer
         {
             totalTime += state.getElapsedTime();
             totalCalls++;
+        }
+        if (null != parents)
+        {
+            for (final Timer timer: parents) {
+                timer.stop(state);
+            }
         }
     }
 }

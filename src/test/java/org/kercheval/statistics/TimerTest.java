@@ -1,5 +1,6 @@
 package org.kercheval.statistics;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import mockit.Mock;
@@ -65,11 +66,16 @@ public class TimerTest
     public void testGetTimer()
     {
         final Timer firstTimer = Timer.getTimer("foobar");
-        final Timer secondTimer = Timer.getTimer("bazquux");
-        final Timer thirdTimer = Timer.getTimer("foobar");
+        final Timer secondTimer = Timer.getTimer("bazquux", firstTimer);
+        final Timer thirdTimer = Timer.getTimer("foobar", secondTimer);
+        final Timer fourthTimer = Timer.getTimer("bazquux", thirdTimer);
+        final Timer fifthTimer = Timer.getTimer("bazquux", (Timer[]) null);
 
         Assert.assertNotSame(firstTimer, secondTimer);
         Assert.assertSame(firstTimer, thirdTimer);
+        Assert.assertTrue(Arrays.equals(firstTimer.getParents(), thirdTimer.getParents()));
+        Assert.assertSame(secondTimer, fourthTimer);
+        Assert.assertSame(secondTimer, fifthTimer);
     }
 
     @Test
@@ -108,17 +114,26 @@ public class TimerTest
         Assert.assertTrue(timer.getTotalTime() >= 50);
         Assert.assertTrue(timer.getAverageTime() < lastAverage);
 
-        final Timer secondTimer = Timer.getTimer("Test Timer 2");
+        final Timer parentTimer1 = Timer.getTimer("Test Parent Timer 1");
+        final Timer parentTimer2 = Timer.getTimer("Test Parent Timer 2");
+        final Timer secondTimer = Timer.getTimer("Test Timer 2", timer, parentTimer1, parentTimer2);
 
         timerState = secondTimer.start();
         timerState.stop();
 
-        Assert.assertEquals(2, timer.getTotalCalls());
+        Assert.assertEquals(3, timer.getTotalCalls());
         Assert.assertEquals(1, secondTimer.getTotalCalls());
         Assert.assertNotEquals(timer.getTotalTime(), secondTimer.getTotalTime());
+        Assert.assertEquals(secondTimer.getTotalCalls(), parentTimer1.getTotalCalls());
+        Assert.assertEquals(parentTimer1.getTotalCalls(), parentTimer2.getTotalCalls());
+
+        timerState = parentTimer1.start();
+        timerState.stop();
+        Assert.assertEquals(secondTimer.getTotalCalls() + 1, parentTimer1.getTotalCalls());
+        Assert.assertNotEquals(parentTimer1.getTotalCalls(), parentTimer2.getTotalCalls());
 
         final Collection<Timer> timers = Timer.getTimers();
-        Assert.assertEquals(initialTimerCount + 2, timers.size());
+        Assert.assertEquals(initialTimerCount + 4, timers.size());
     }
 
     @Test

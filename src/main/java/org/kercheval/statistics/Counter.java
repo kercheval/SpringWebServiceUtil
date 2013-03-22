@@ -27,10 +27,10 @@ import scala.actors.threadpool.Arrays;
  * If a counter with a particular name already has been created, that counter
  * will be returned.
  * <p>
- * A counter may have more than one parent counter to allow aggregation statistics
+ * A counter may have one or more parent counters to allow aggregation statistics
  * to be maintained.  Normally a parented counter will be initiated using
  * the factory method {@link Counter#getCounter(String, Counter...)} and then obtained
- * again for usage via {@link Counter@getCounter(String)}.  Warnings will be
+ * again for usage via {@link Counter#getCounter(String)}.  Warnings will be
  * logged if inconsistent factory method usage is made for a specific counter and
  * different parent parameters.
  * <p>
@@ -67,7 +67,7 @@ public class Counter
     }
 
     /**
-     * Get a counter with the name and parent specified.  The counter returned
+     * Get a counter with the name and parents specified.  The counter returned
      * is a thread safe and atomic counter.  Multiple threads may be
      * updating or reading a particular counter at the same time.
      * <p>
@@ -116,7 +116,7 @@ public class Counter
                 //
                 if ((parents != null) &&
                                 !Arrays.equals(parents, newCounter.parents)) {
-                    log.warn("Counter factory method called with different parents than initial construction for Counter " + newCounter.getName());
+                    log.warn("Counter factory method called with different parents than initial construction for Counter '" + newCounter.getName() + "'");
                 }
             }
             return newCounter;
@@ -163,6 +163,16 @@ public class Counter
         return name;
     }
 
+    /**
+     * Return the parent counters for this counter.  The parent counters
+     * are determined by the first call to a factory method for a counter
+     * of a specific name.  The parents of a counter may not be changed
+     * so care should be taken to ensure the parent list is appropriate
+     * before the first call to obtain a counter is made using
+     * {@link Counter#getCounter}.
+     *
+     * @return an array of parent counters or null if no parents exist
+     */
     public Counter[] getParents()
     {
         return parents;
