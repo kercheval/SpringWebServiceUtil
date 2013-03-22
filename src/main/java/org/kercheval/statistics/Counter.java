@@ -13,6 +13,8 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import scala.actors.threadpool.Arrays;
+
 /**
  * Implements a thread safe, atomic counter that is registered as a JMX bean.
  * <p>
@@ -24,6 +26,13 @@ import org.slf4j.LoggerFactory;
  * already exist) by the factory method {@link Counter#getCounter(String)}.
  * If a counter with a particular name already has been created, that counter
  * will be returned.
+ * <p>
+ * A counter may have more than one parent counter to allow aggregation statistics
+ * to be maintained.  Normally a parented counter will be initiated using
+ * the factory method {@link Counter#getCounter(String, Counter...)} and then obtained
+ * again for usage via {@link Counter@getCounter(String)}.  Warnings will be
+ * logged if inconsistent factory method usage is made for a specific counter and
+ * different parent parameters.
  * <p>
  * When a new counter is created, it is registered as an mbean in the current
  * JMX server instance and can be read via any JMX client.
@@ -58,6 +67,63 @@ public class Counter
     }
 
     /**
+     * Get a counter with the name and parent specified.  The counter returned
+     * is a thread safe and atomic counter.  Multiple threads may be
+     * updating or reading a particular counter at the same time.
+     * <p>
+     * When updating a counter with a parent, the parent counter will also be
+     * updated.  This allows for simple aggregate counts.  A counters parents
+     * may never change, so if a getCounter call with a different parent set
+     * is used, a warning log message will be written.  A call to
+     * {@link Counter#getCounter(String)} will not write a warning message.
+     * The first counter to be created will always be returned, so if you are
+     * using parented counters, take care in construction order.
+     * <p>
+     * This factory method will create a new counter if one with
+     * the specified name has not already been created.  If a new counter
+     * is created, that counter is registered as a JMX mbean and can be
+     * accessed via jconsole or other JMX client.
+     *
+     * @param name the name of the counter to get
+     * @param parents the parent counters to update when this counter is updated
+     * @return the counter with the name specified
+     */
+    public static Counter getCounter(final String name, final Counter... parents)
+    {
+        synchronized (COUNTER_MAP)
+        {
+            Counter newCounter = COUNTER_MAP.get(name);
+            if (null == newCounter)
+            {
+                newCounter = new Counter(name, parents);
+                COUNTER_MAP.put(name, newCounter);
+                try
+                {
+                    mBeanServer.registerMBean(newCounter, new ObjectName("org.kercheval:type=Counter,name=" + name));
+                }
+                catch (final Exception e)
+                {
+                    // Ignore errors except to log the problem
+                    log.debug("Error creating mBean for Counter '" + newCounter.getName() +
+                        "': " + e.getMessage());
+                }
+            }
+            else
+            {
+                //
+                // Verify the parents passed in have not changed and log that fact if
+                // they have.  We explicitly do not fail in this case
+                //
+                if ((parents != null) &&
+                                !Arrays.equals(parents, newCounter.parents)) {
+                    log.warn("Counter factory method called with different parents than initial construction for Counter " + newCounter.getName());
+                }
+            }
+            return newCounter;
+        }
+    }
+
+    /**
      * Get a counter with the name specified.  The counter returned
      * is a thread safe and atomic counter.  Multiple threads may be
      * updating or reading a particular counter at the same time.
@@ -72,34 +138,17 @@ public class Counter
      */
     public static Counter getCounter(final String name)
     {
-        synchronized (COUNTER_MAP)
-        {
-            Counter newCounter = COUNTER_MAP.get(name);
-            if (null == newCounter)
-            {
-                newCounter = new Counter(name);
-                COUNTER_MAP.put(name, newCounter);
-                try
-                {
-                    mBeanServer.registerMBean(newCounter, new ObjectName("org.kercheval:type=Counter,name=" + name));
-                }
-                catch (final Exception e)
-                {
-                    // Ignore errors except to log the problem
-                    log.debug("Error creating mBean for Counter '" + newCounter.getName() +
-                        "': " + e.getMessage());
-                }
-            }
-            return newCounter;
-        }
+        return getCounter(name, (Counter[]) null);
     }
 
     private final AtomicLong count = new AtomicLong(0);
     private final String name;
+    private final Counter[] parents;
 
-    private Counter(final String name)
+    private Counter(final String name, final Counter... parents)
     {
         this.name = name;
+        this.parents = parents;
     }
 
     @Override
@@ -114,11 +163,20 @@ public class Counter
         return name;
     }
 
+    public Counter[] getParents()
+    {
+        return parents;
+    }
+
     /**
      * Increment the current counter.  The current value in this will be
      * incremented by the number passed in the delta parameter.  Typical
      * counter behavior will use one for the delta value, but other values
      * are accepted.
+     * <p>
+     * The parent counters (if any) will be updated by the delta value after
+     * the counter has been updated.  During update, the parent counters may
+     * be inconsistent with the child counter as updates are not transactional.
      * <p>
      * Counter updates are thread safe and atomic for the counter.
      *
@@ -127,5 +185,12 @@ public class Counter
     public void increment(final long delta)
     {
         count.getAndAdd(delta);
+        if (null != parents)
+        {
+            for (final Counter parent: parents)
+            {
+                parent.increment(delta);
+            }
+        }
     }
 }
