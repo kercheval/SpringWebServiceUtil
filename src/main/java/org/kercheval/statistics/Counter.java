@@ -99,7 +99,12 @@ public class Counter
                 COUNTER_MAP.put(name, newCounter);
                 try
                 {
-                    mBeanServer.registerMBean(newCounter, new ObjectName("org.kercheval:type=Counter,name=" + name));
+                    String mBeanName = "org.kercheval:type=Counter,name=";
+                    if (null != parents)
+                    {
+                        mBeanName = "org.kercheval:type=Counter.Detail,name=";
+                    }
+                    mBeanServer.registerMBean(newCounter, new ObjectName(mBeanName + name));
                 }
                 catch (final Exception e)
                 {

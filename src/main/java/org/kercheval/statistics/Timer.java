@@ -224,7 +224,12 @@ public final class Timer
                 TIMER_MAP.put(name, newTimer);
                 try
                 {
-                    mBeanServer.registerMBean(newTimer, new ObjectName("org.kercheval:type=Timer,name=" + name));
+                    String mBeanName = "org.kercheval:type=Timer,name=";
+                    if (null != parents)
+                    {
+                        mBeanName = "org.kercheval:type=Timer.Detail,name=";
+                    }
+                    mBeanServer.registerMBean(newTimer, new ObjectName(mBeanName + name));
                 }
                 catch (final Exception e)
                 {
