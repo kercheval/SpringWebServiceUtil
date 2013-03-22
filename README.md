@@ -74,6 +74,7 @@ MVC file a line to parse the jar controller annotations
 
 ### Release History
 
+- 1.7 - March 22, 2012 - Add a simple main for testing
 - 1.6 - March 22, 2012 - Parented counters and timers get JMX detail types
 - 1.5 - March 22, 2012 - Add support for parent counters and timers
 - 1.4 - March 13, 2012 - Add javadoc and more JUNIT coverage
