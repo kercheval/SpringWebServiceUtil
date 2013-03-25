@@ -13,10 +13,10 @@ public class Main
     public static void main(final String[] args) throws InterruptedException
     {
         final Timer timerParent = Timer.getTimer("Parent");
-        final Timer timerNormal = Timer.getTimer("Timer", timerParent);
+        final Timer timerNormal = Timer.getTimer("org.kercheval", "Timer.detail", "Timer", timerParent);
 
         final Counter counterParent = Counter.getCounter("Parent");
-        final Counter counterNormal = Counter.getCounter("Counter", counterParent);
+        final Counter counterNormal = Counter.getCounter("org.kercheval", "Counter.detail", "Counter", counterParent);
 
         while (true) {
             final TimerState timerState = timerNormal.start();

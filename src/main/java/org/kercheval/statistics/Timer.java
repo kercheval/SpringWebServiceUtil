@@ -1,14 +1,11 @@
 package org.kercheval.statistics;
 
-import java.lang.management.ManagementFactory;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
+import org.kercheval.jmx.JMXRegistered;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +26,7 @@ import scala.actors.threadpool.Arrays;
  * <p>
  * A timer may have one or more parent timers to allow aggregation statistics
  * to be maintained.  Normally a parented timer will be initiated using
- * the factory method {@link Timer#getTimer(String, Timer...)} and then obtained
+ * the factory method {@link Timer#getTimer(String, String, String, Timer...)} and then obtained
  * again for usage via {@link Timer#getTimer(String)}.  Warnings will be
  * logged if inconsistent factory method usage is made for a specific timer and
  * different parent parameters.
@@ -41,6 +38,7 @@ import scala.actors.threadpool.Arrays;
  * @see TimerState
  */
 public final class Timer
+    extends JMXRegistered
     implements TimerMBean
 {
     /**
@@ -187,7 +185,6 @@ public final class Timer
     }
 
     private static final Map<String, Timer> TIMER_MAP = new HashMap<String, Timer>();
-    private static final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
     private static final Logger log = LoggerFactory.getLogger(Timer.class);
 
     /**
@@ -209,34 +206,22 @@ public final class Timer
      * is created, that timer is registered as a JMX mbean and can be
      * accessed via jconsole or other JMX client.
      *
+     * @param domain the JMX domain to register this timer for
+     * @param type the JMX type for this timer
      * @param name the name of the timer to get
      * @param parents the parent timers to update when this timer is updated
+     *
      * @return the timer with the name specified
      */
-    public static Timer getTimer(final String name, final Timer... parents)
+    public static Timer getTimer(final String domain, final String type, final String name, final Timer... parents)
     {
         synchronized (TIMER_MAP)
         {
             Timer newTimer = TIMER_MAP.get(name);
             if (null == newTimer)
             {
-                newTimer = new Timer(name, parents);
+                newTimer = new Timer(domain, type, name, parents);
                 TIMER_MAP.put(name, newTimer);
-                try
-                {
-                    String mBeanName = "org.kercheval:type=Timer,name=";
-                    if (null != parents)
-                    {
-                        mBeanName = "org.kercheval:type=Timer.Detail,name=";
-                    }
-                    mBeanServer.registerMBean(newTimer, new ObjectName(mBeanName + name));
-                }
-                catch (final Exception e)
-                {
-                    // Ignore errors except to log the problem
-                    log.debug("Error creating mBean for Timer '" + newTimer.getName() +
-                        "': " + e.getMessage());
-                }
             }
             else
             {
@@ -269,7 +254,7 @@ public final class Timer
      */
     public static Timer getTimer(final String name)
     {
-        return getTimer(name, (Timer[]) null);
+        return getTimer("org.kercheval", "Timer", name, (Timer[]) null);
     }
 
     /**
@@ -295,14 +280,14 @@ public final class Timer
     private long totalTime = 0;
     private long totalCalls = 0;
 
-    private final String name;
     private final Timer[] parents;
 
     private final Object timerLock = new Object();
 
-    private Timer(final String name, final Timer... parents)
+    private Timer(final String domain, final String type, final String name, final Timer... parents)
     {
-        this.name = name;
+        super(log, domain, type, name);
+
         this.parents = parents;
     }
 
@@ -318,12 +303,6 @@ public final class Timer
             }
             return rVal;
         }
-    }
-
-    @Override
-    public String getName()
-    {
-        return name;
     }
 
     /**

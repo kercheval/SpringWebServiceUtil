@@ -66,10 +66,10 @@ public class TimerTest
     public void testGetTimer()
     {
         final Timer firstTimer = Timer.getTimer("foobar");
-        final Timer secondTimer = Timer.getTimer("bazquux", firstTimer);
-        final Timer thirdTimer = Timer.getTimer("foobar", secondTimer);
-        final Timer fourthTimer = Timer.getTimer("bazquux", thirdTimer);
-        final Timer fifthTimer = Timer.getTimer("bazquux", (Timer[]) null);
+        final Timer secondTimer = Timer.getTimer("org.kercheval", "Timer", "bazquux", firstTimer);
+        final Timer thirdTimer = Timer.getTimer("org.kercheval", "Timer", "foobar", secondTimer);
+        final Timer fourthTimer = Timer.getTimer("org.kercheval", "Timer", "bazquux", thirdTimer);
+        final Timer fifthTimer = Timer.getTimer("org.kercheval", "Timer", "bazquux", (Timer[]) null);
 
         Assert.assertNotSame(firstTimer, secondTimer);
         Assert.assertSame(firstTimer, thirdTimer);
@@ -83,7 +83,7 @@ public class TimerTest
     {
         final int initialTimerCount = Timer.getTimers().size();
         final Timer timer = Timer.getTimer(TEST_TIMER_1);
-        Assert.assertEquals(TEST_TIMER_1, timer.getName());
+        Assert.assertEquals("Test.Timer.1", timer.getName());
         Assert.assertEquals(Double.valueOf(0.0), Double.valueOf(timer.getAverageTime()));
 
         Timer.TimerState timerState = timer.start();
@@ -116,7 +116,7 @@ public class TimerTest
 
         final Timer parentTimer1 = Timer.getTimer("Test Parent Timer 1");
         final Timer parentTimer2 = Timer.getTimer("Test Parent Timer 2");
-        final Timer secondTimer = Timer.getTimer("Test Timer 2", timer, parentTimer1, parentTimer2);
+        final Timer secondTimer = Timer.getTimer("org.kercheval", "Timer", "Test Timer 2", timer, parentTimer1, parentTimer2);
 
         timerState = secondTimer.start();
         timerState.stop();

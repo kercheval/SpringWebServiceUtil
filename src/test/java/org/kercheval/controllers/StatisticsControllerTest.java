@@ -5,6 +5,7 @@ import java.util.Properties;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.kercheval.jmx.JMXRegistered;
 import org.kercheval.statistics.Counter;
 import org.kercheval.statistics.Timer;
 
@@ -16,7 +17,7 @@ public class StatisticsControllerTest
         final StatisticsController controller = new StatisticsController();
         Collection<Counter> counters = controller.getCounterStatistics();
         final int initialSize = counters.size();
-        final Counter newCounter = Counter.getCounter("StatisticsControllerTest.testCounters");
+        final JMXRegistered newCounter = Counter.getCounter("StatisticsControllerTest.testCounters");
 
         counters = controller.getCounterStatistics();
         Assert.assertEquals("Invalid counter length", initialSize+1, counters.size());

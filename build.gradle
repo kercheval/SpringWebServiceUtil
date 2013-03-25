@@ -76,6 +76,11 @@ dependencies {
     compile "org.springframework:spring-jdbc:${springVersion}"
 
     //
+    // Apache commons
+    //
+    compile "org.apache.commons:commons-lang3:3.1"
+
+    //
     // Jackson for JSON return
     //
     runtime "org.codehaus.jackson:jackson-mapper-asl:$jacksonVersion"

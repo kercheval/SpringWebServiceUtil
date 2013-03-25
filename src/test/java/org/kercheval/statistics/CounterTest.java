@@ -19,11 +19,11 @@ public class CounterTest
         final Counter counter = Counter.getCounter(MY_TEST_COUNTER);
         final Counter counterParent = Counter.getCounter(MY_PARENT_TEST_COUNTER);
         final Counter counterSecondParent = Counter.getCounter(MY_SECOND_PARENT_TEST_COUNTER);
-        final Counter counterAgain = Counter.getCounter(MY_TEST_COUNTER, counterParent);
-        final Counter counterParented = Counter.getCounter(MY_PARENTED_TEST_COUNTER, counterParent, counterSecondParent);
-        final Counter counterParentedSame = Counter.getCounter(MY_PARENTED_TEST_COUNTER, counterParent, counterSecondParent);
-        final Counter counterParentedAgain = Counter.getCounter(MY_PARENTED_TEST_COUNTER, (Counter[]) null);
-        final Counter counterParentedAgainAndAgain = Counter.getCounter(MY_PARENTED_TEST_COUNTER, counterAgain);
+        final Counter counterAgain = Counter.getCounter("org.kercheval", "Counter", MY_TEST_COUNTER, counterParent);
+        final Counter counterParented = Counter.getCounter("org.kercheval", "Counter", MY_PARENTED_TEST_COUNTER, counterParent, counterSecondParent);
+        final Counter counterParentedSame = Counter.getCounter("org.kercheval", "Counter", MY_PARENTED_TEST_COUNTER, counterParent, counterSecondParent);
+        final Counter counterParentedAgain = Counter.getCounter("org.kercheval", "Counter", MY_PARENTED_TEST_COUNTER, (Counter[]) null);
+        final Counter counterParentedAgainAndAgain = Counter.getCounter("org.kercheval", "Counter", MY_PARENTED_TEST_COUNTER, counterAgain);
 
         Assert.assertSame(counter, counterAgain);
         Assert.assertSame(counterParented, counterParentedSame);
@@ -34,7 +34,7 @@ public class CounterTest
         final Counter[] parentArray = { counterParent, counterSecondParent };
         Assert.assertTrue(Arrays.equals(counterParented.getParents(), parentArray));
         Assert.assertEquals(0, counter.getCount());
-        Assert.assertEquals(MY_TEST_COUNTER, counter.getName());
+        Assert.assertEquals("My.Test.Counter", counter.getName());
 
         counter.increment(1);
 
