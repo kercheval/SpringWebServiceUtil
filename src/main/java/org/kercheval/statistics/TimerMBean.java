@@ -46,4 +46,20 @@ public interface TimerMBean
      * @return the average time for all uses of this timer
      */
     public double getAverageTime();
+
+    /**
+     * Get the minimum time (in ms) that was reported by any user of
+     * this timer.
+     *
+     * @return the minimum time for all uses of this timer
+     */
+    public long getMinTime();
+
+    /**
+     * Get the maximum time (in ms) that was reported by any user of this
+     * timer.
+     *
+     * @return the maximum time for all uses of this timer
+     */
+    public long getMaxTime();
 }

@@ -152,4 +152,32 @@ public class TimerTest
             // Expected
         }
     }
+
+    @Test
+    public void testMinMax() throws InterruptedException
+    {
+        final Timer timer = Timer.getTimer("Timer MinMax Test");
+        Assert.assertEquals(0, timer.getMinTime());
+        Assert.assertEquals(0, timer.getMaxTime());
+
+        Timer.TimerState timerState = timer.start();
+        Thread.sleep(50);
+        timerState.stop();
+        final long min = timerState.getElapsedTime();
+
+        timerState = timer.start();
+        Thread.sleep(150);
+        timerState.stop();
+
+        timerState = timer.start();
+        Thread.sleep(250);
+        timerState.stop();
+        final long max = timerState.getElapsedTime();
+
+        Assert.assertTrue(min < max);
+        Assert.assertEquals(min, timer.getMinTime());
+        Assert.assertEquals(max, timer.getMaxTime());
+        Assert.assertTrue(min < timer.getAverageTime());
+        Assert.assertTrue(max > timer.getAverageTime());
+    }
 }

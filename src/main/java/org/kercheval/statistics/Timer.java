@@ -279,6 +279,8 @@ public final class Timer
 
     private long totalTime = 0;
     private long totalCalls = 0;
+    private long minTime = Long.MAX_VALUE;
+    private long maxTime = Long.MIN_VALUE;
 
     private final Timer[] parents;
 
@@ -338,6 +340,24 @@ public final class Timer
         }
     }
 
+    @Override
+    public long getMinTime()
+    {
+        synchronized (timerLock)
+        {
+            return minTime == Long.MAX_VALUE ? 0 : minTime;
+        }
+    }
+
+    @Override
+    public long getMaxTime()
+    {
+        synchronized (timerLock)
+        {
+            return maxTime == Long.MIN_VALUE ? 0 : maxTime;
+        }
+    }
+
     /**
      * Get a {@link TimerState} that allows the timing of a specific single
      * event.  The returned object contains all the state necessary to
@@ -359,7 +379,17 @@ public final class Timer
     {
         synchronized (timerLock)
         {
-            totalTime += state.getElapsedTime();
+            final long elapsed = state.getElapsedTime();
+
+            if (elapsed < minTime)
+            {
+                minTime = elapsed;
+            }
+            if (elapsed > maxTime)
+            {
+                maxTime = elapsed;
+            }
+            totalTime += elapsed;
             totalCalls++;
         }
         if (null != parents)
