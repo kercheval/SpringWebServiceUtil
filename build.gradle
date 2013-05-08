@@ -5,6 +5,7 @@ apply plugin: 'gradlecm'
 apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'jacoco'
 
 
 //
@@ -224,7 +225,7 @@ buildscript {
 // Gradle wrapper
 //
 task wrapper(type: Wrapper) {
-	gradleVersion = '1.5'
+	gradleVersion = '1.6'
 }
 
 
