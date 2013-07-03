@@ -1,0 +1,48 @@
+//
+//  Publish to accessible maven repository, the jsondoc libraries (http://jsondoc.org/)
+//
+apply plugin: 'maven'
+description = 'JSON Doc Maven Publisher'
+
+def jsonDocVersion = '1.0.1'
+def coreFile = file("jsondoc-core-${jsonDocVersion}.jar")
+def springFile = file("jsondoc-springmvc-${jsonDocVersion}.jar")
+
+//
+// The publish group for the repository
+//
+group = 'org.jsondoc'
+version = jsonDocVersion
+
+configurations {
+    coreJar
+    springJar
+}
+
+artifacts {
+    coreJar coreFile
+    springJar springFile
+}
+
+uploadCoreJar {
+    repositories {
+        mavenDeployer {
+            repository(url: "file://${rootDir}/../../mvn-repo/releases")
+        }
+    }
+}
+
+uploadSpringJar {
+    repositories {
+        mavenDeployer {
+            repository(url: "file://${rootDir}/../../mvn-repo/releases")
+        }
+    }
+}
+
+task uploadAllJars {
+    println 'Uploading JSONDoc JAR Files...'
+}
+
+uploadAllJars.dependsOn(uploadCoreJar)
+uploadAllJars.dependsOn(uploadSpringJar)
