@@ -74,6 +74,7 @@ MVC file a line to parse the jar controller annotations
 
 ### Release History
 
+- 1.11 - July 3, 2013 - Conver to use of jsondoc from swagger to simplify usage and dependencies
 - 1.10 - April 9, 2013 - Add min and max data to timer
 - 1.9 - March 25, 2013 - Add explicit support to set domain and type for JMX
 - 1.7 - March 22, 2013 - Add a simple main for testing
