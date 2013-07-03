@@ -1,5 +1,6 @@
 package org.kercheval.statistics;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,8 +9,6 @@ import java.util.Map;
 import org.kercheval.jmx.JMXRegistered;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import scala.actors.threadpool.Arrays;
 
 /**
  * Implements a thread safe, atomic timer that is registered as a JMX bean.

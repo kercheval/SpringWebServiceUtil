@@ -1,9 +1,9 @@
 package org.kercheval.statistics;
 
+import java.util.Arrays;
+
 import org.junit.Assert;
 import org.junit.Test;
-
-import scala.actors.threadpool.Arrays;
 
 public class CounterTest
 {

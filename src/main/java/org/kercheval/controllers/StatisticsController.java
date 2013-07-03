@@ -8,19 +8,21 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Properties;
 
+import org.jsondoc.core.annotation.Api;
+import org.jsondoc.core.annotation.ApiMethod;
+import org.jsondoc.core.annotation.ApiResponseObject;
+import org.jsondoc.core.pojo.ApiVerb;
 import org.kercheval.statistics.Counter;
 import org.kercheval.statistics.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.google.code.tempusfugit.concurrency.ThreadDump;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.jaxrs.JavaHelp;
 
 /**
  * This class supports the creation of a statistic interface for web
@@ -66,10 +68,9 @@ import com.wordnik.swagger.jaxrs.JavaHelp;
 @Controller
 @RequestMapping("/statistics")
 @Api(
-    value = "/statistics",
+    name = "Statistics",
     description = "Obtain API Timer information")
 public class StatisticsController
-    extends JavaHelp
 {
     final Logger logger;
 
@@ -94,12 +95,14 @@ public class StatisticsController
         value = "/counters",
         method = RequestMethod.GET)
     @ResponseBody
-    @ApiOperation(
-        value = "List all counters",
-        notes = "Returns a list of all counters available.  These counters represent allocated entities in the API.  The returned list is unsorted.",
-        responseClass = "com.asd.statistics.Counter",
-        multiValueResponse = true)
-    public Collection<Counter> getCounterStatistics()
+    @ApiMethod(
+        path="/statistics/counters",
+        verb=ApiVerb.GET,
+        description = "Returns a list of all counters available.  These counters represent allocated entities in the API.  The returned list is unsorted.",
+        produces={MediaType.APPLICATION_JSON_VALUE},
+        consumes={MediaType.APPLICATION_JSON_VALUE}
+    )
+    public @ApiResponseObject Collection<Counter> getCounterStatistics()
     {
         return Counter.getCounters();
     }
@@ -115,10 +118,14 @@ public class StatisticsController
         value = "/host",
         method = RequestMethod.GET)
     @ResponseBody
-    @ApiOperation(
-        value = "List host information for the current VM",
-        notes = "Returns a list of host properties which the current VM is running on.  The returned list is unsorted.")
-    public Properties getHostInfo()
+    @ApiMethod(
+        path="/statistics/host",
+        verb=ApiVerb.GET,
+        description = "Returns a list of host properties which the current VM is running on.  The returned list is unsorted.",
+        produces={MediaType.APPLICATION_JSON_VALUE},
+        consumes={MediaType.APPLICATION_JSON_VALUE}
+    )
+    public @ApiResponseObject Properties getHostInfo()
     {
         final Properties hostProps = new Properties();
         InetAddress addr;
@@ -154,10 +161,14 @@ public class StatisticsController
         value = "/memory",
         method = RequestMethod.GET)
     @ResponseBody
-    @ApiOperation(
-        value = "List memory usage in the running VM",
-        notes = "Show the current allocated, free and maximum memory in bytes in the VM.  The allocated memory value is interesting, but the free memory may be misleading since the VM may allocate more memory up to the value specified by the -Xmx VM parameter.  The maximum memory value represents what the VM will attempt to allocate if necessary, but may be limited by OS memory constraints.")
-    public Properties getMemoryUsage()
+    @ApiMethod(
+        path="/statistics/memory",
+        verb=ApiVerb.GET,
+        description = "Show the current allocated, free and maximum memory in bytes in the VM.  The allocated memory value is interesting, but the free memory may be misleading since the VM may allocate more memory up to the value specified by the -Xmx VM parameter.  The maximum memory value represents what the VM will attempt to allocate if necessary, but may be limited by OS memory constraints.",
+        produces={MediaType.APPLICATION_JSON_VALUE},
+        consumes={MediaType.APPLICATION_JSON_VALUE}
+    )
+    public @ApiResponseObject Properties getMemoryUsage()
     {
         final Properties memProps = new Properties();
         memProps.put("vm.memory.used", Runtime.getRuntime().totalMemory());
@@ -177,10 +188,14 @@ public class StatisticsController
         value = "/system",
         method = RequestMethod.GET)
     @ResponseBody
-    @ApiOperation(
-        value = "List all system properties for the current VM",
-        notes = "Returns the list of system properties available for the VM running the API.  The returned list is unsorted.")
-    public Properties getSystemProperties()
+    @ApiMethod(
+        path="/statistics/system",
+        verb=ApiVerb.GET,
+        description = "Returns the list of system properties available for the VM running the API.  The returned list is unsorted.",
+        produces={MediaType.APPLICATION_JSON_VALUE},
+        consumes={MediaType.APPLICATION_JSON_VALUE}
+    )
+    public @ApiResponseObject Properties getSystemProperties()
     {
         return System.getProperties();
     }
@@ -197,10 +212,14 @@ public class StatisticsController
         value = "/threads",
         method = RequestMethod.GET)
     @ResponseBody
-    @ApiOperation(
-        value = "Obtain a thread dump of the current VM",
-        notes = "Returns a full thread dump of all threads in the running VM.  This will also perform deadlock detection and show results.")
-    public String getThreadDump()
+    @ApiMethod(
+        path="/statistics/system",
+        verb=ApiVerb.GET,
+        description = "Returns a full thread dump of all threads in the running VM.  This will also perform deadlock detection and show results.",
+        produces={MediaType.APPLICATION_JSON_VALUE},
+        consumes={MediaType.APPLICATION_JSON_VALUE}
+    )
+    public @ApiResponseObject String getThreadDump()
     {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ThreadDump.dumpThreads(new PrintStream(baos));
@@ -219,12 +238,14 @@ public class StatisticsController
         value = "/timers",
         method = RequestMethod.GET)
     @ResponseBody
-    @ApiOperation(
-        value = "List all timers",
-        notes = "Returns a list of all timers available.  These timers give information about call frequency and response rates for API service and dao calls in the system.  The returned list is unsorted.",
-        responseClass = "com.asd.statistics.Timer",
-        multiValueResponse = true)
-    public Collection<Timer> getTimerStatistics()
+    @ApiMethod(
+        path="/statistics/system",
+        verb=ApiVerb.GET,
+        description = "Returns a list of all timers available.  These timers give information about call frequency and response rates for API service and dao calls in the system.  The returned list is unsorted.",
+        produces={MediaType.APPLICATION_JSON_VALUE},
+        consumes={MediaType.APPLICATION_JSON_VALUE}
+    )
+    public @ApiResponseObject Collection<Timer> getTimerStatistics()
     {
         return Timer.getTimers();
     }

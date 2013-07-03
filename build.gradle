@@ -89,9 +89,10 @@ dependencies {
     runtime "org.codehaus.jackson:jackson-mapper-asl:$jacksonVersion"
 
     //
-    // Swagger (https://developers.helloreverb.com/swagger/)
+    // JSON Doc
     //
-    compile ('com.wordnik:swagger-jaxrs_2.9.1:1.1.0')
+    compile 'org.jsondoc:jsondoc-core:1.0.1'
+    compile 'org.jsondoc:jsondoc-springmvc:1.0.1'
 
     //
     // Trace and multiprocess support library
@@ -115,6 +116,7 @@ allprojects {
     //
     repositories {
         mavenCentral()
+		mavenRepo url: 'http://kercheval.org/mvn-repo/releases'
     }
 
 
