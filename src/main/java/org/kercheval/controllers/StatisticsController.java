@@ -10,7 +10,6 @@ import java.util.Properties;
 
 import org.jsondoc.core.annotation.Api;
 import org.jsondoc.core.annotation.ApiMethod;
-import org.jsondoc.core.annotation.ApiResponseObject;
 import org.jsondoc.core.pojo.ApiVerb;
 import org.kercheval.statistics.Counter;
 import org.kercheval.statistics.Timer;
@@ -102,7 +101,7 @@ public class StatisticsController
         produces={MediaType.APPLICATION_JSON_VALUE},
         consumes={MediaType.APPLICATION_JSON_VALUE}
     )
-    public @ApiResponseObject Collection<Counter> getCounterStatistics()
+    public Collection<Counter> getCounterStatistics()
     {
         return Counter.getCounters();
     }
@@ -125,7 +124,7 @@ public class StatisticsController
         produces={MediaType.APPLICATION_JSON_VALUE},
         consumes={MediaType.APPLICATION_JSON_VALUE}
     )
-    public @ApiResponseObject Properties getHostInfo()
+    public Properties getHostInfo()
     {
         final Properties hostProps = new Properties();
         InetAddress addr;
@@ -168,7 +167,7 @@ public class StatisticsController
         produces={MediaType.APPLICATION_JSON_VALUE},
         consumes={MediaType.APPLICATION_JSON_VALUE}
     )
-    public @ApiResponseObject Properties getMemoryUsage()
+    public Properties getMemoryUsage()
     {
         final Properties memProps = new Properties();
         memProps.put("vm.memory.used", Runtime.getRuntime().totalMemory());
@@ -195,7 +194,7 @@ public class StatisticsController
         produces={MediaType.APPLICATION_JSON_VALUE},
         consumes={MediaType.APPLICATION_JSON_VALUE}
     )
-    public @ApiResponseObject Properties getSystemProperties()
+    public Properties getSystemProperties()
     {
         return System.getProperties();
     }
@@ -219,7 +218,7 @@ public class StatisticsController
         produces={MediaType.APPLICATION_JSON_VALUE},
         consumes={MediaType.APPLICATION_JSON_VALUE}
     )
-    public @ApiResponseObject String getThreadDump()
+    public String getThreadDump()
     {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ThreadDump.dumpThreads(new PrintStream(baos));
@@ -245,7 +244,7 @@ public class StatisticsController
         produces={MediaType.APPLICATION_JSON_VALUE},
         consumes={MediaType.APPLICATION_JSON_VALUE}
     )
-    public @ApiResponseObject Collection<Timer> getTimerStatistics()
+    public Collection<Timer> getTimerStatistics()
     {
         return Timer.getTimers();
     }

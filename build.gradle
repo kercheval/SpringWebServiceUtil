@@ -93,6 +93,7 @@ dependencies {
     //
     compile 'org.jsondoc:jsondoc-core:1.0.1'
     compile 'org.jsondoc:jsondoc-springmvc:1.0.1'
+    compile 'org.reflections:reflections:0.9.9-RC1'
 
     //
     // Trace and multiprocess support library
