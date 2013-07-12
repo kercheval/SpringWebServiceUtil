@@ -86,7 +86,7 @@ dependencies {
     //
     // Jackson for JSON return
     //
-    runtime "org.codehaus.jackson:jackson-mapper-asl:$jacksonVersion"
+    compile "org.codehaus.jackson:jackson-mapper-asl:$jacksonVersion"
 
     //
     // JSON Doc
