@@ -185,7 +185,6 @@ public class Config
         logPropertyLoad(properties);
     }
 
-    @SuppressWarnings("resource")
     private Properties getPropertiesFromClasspath(final String propFileName)
         throws IOException
     {
