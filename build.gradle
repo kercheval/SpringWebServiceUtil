@@ -170,7 +170,7 @@ allprojects {
     //
     // Enable lint compilation for compile output
     //
-    tasks.withType(Compile) {
+    tasks.withType(JavaCompile) {
         options.compilerArgs << "-Xlint:unchecked"
     }
 
@@ -223,6 +223,6 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'org.kercheval:GradleCMPlugin:1.14-20130611.134348'
+        classpath 'org.kercheval:GradleCMPlugin:1.19-20140812.223938'
     }
 }
