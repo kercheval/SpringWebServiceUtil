@@ -223,6 +223,6 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'org.kercheval:GradleCMPlugin:1.19-20140812.223938'
+        classpath 'org.kercheval:GradleCMPlugin:1.20-20140904.214706'
     }
 }
